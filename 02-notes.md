@@ -99,3 +99,94 @@ docker inspect <container-id>
 # Summary
 
 By default, Docker Compose creates a project-specific network so containers can communicate using service names. If you want to use a network that already exists, you must declare it as an external network in the `docker-compose.yml` file.
+
+=============================================================================================
+# Understanding `external: true` in Docker Compose
+
+In Docker Compose:
+
+```yaml
+networks:
+  my-network:
+    external: true
+```
+
+The `external: true` option tells Docker Compose:
+
+> Do not create this network. Instead, use an existing Docker network that has already been created.
+
+## Without `external: true`
+
+```yaml
+networks:
+  my-network:
+```
+
+When you run:
+
+```bash
+docker-compose up -d
+```
+
+Docker Compose automatically creates the network if it does not already exist.
+
+## With `external: true`
+
+```yaml
+networks:
+  my-network:
+    external: true
+```
+
+Docker Compose expects the network to already exist before starting the containers.
+
+Create the network manually:
+
+```bash
+docker network create my-network
+```
+
+If the network does not exist, Docker Compose displays an error similar to:
+
+```text
+network my-network declared as external, but could not be found
+```
+
+## Why Use `external: true`?
+
+Using an external network is useful when:
+
+* Multiple Docker Compose projects need to share the same network.
+* You want to manage network creation manually.
+* Containers from different Compose files need to communicate with each other.
+* You want greater control over network configuration and lifecycle.
+
+## Example
+
+```yaml
+services:
+  mongodb:
+    image: mongo
+    networks:
+      - my-network
+
+  mongo-express:
+    image: mongo-express
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    external: true
+```
+
+In this example:
+
+1. Docker Compose does not create a new network.
+2. Both containers join the existing `my-network`.
+3. Containers can communicate with other containers connected to the same external network.
+
+## Summary
+
+* `external: false` (default) → Docker Compose creates and manages the network.
+* `external: true` → Docker Compose uses an existing network and does not create or delete it.
